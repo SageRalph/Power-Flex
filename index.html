@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>POWER FLEX - Grid Balancing Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="top-bar">
+            <div class="title-section">
+                <h1>⚡ POWER FLEX</h1>
+                <span class="subtitle">Balance and decarbonise your power grid</span>
+            </div>
+            
+            <div class="balance-section">
+                <span class="balance-title">Grid Balance:</span>
+                <div class="balance-display">
+                    <div class="balance-item">
+                        <span class="label">Night</span>
+                        <span class="value" id="night-total">0</span>
+                        <span class="new-value" id="night-new"></span>
+                    </div>
+                    <div class="balance-item">
+                        <span class="label">Day</span>
+                        <span class="value" id="day-total">0</span>
+                        <span class="new-value" id="day-new"></span>
+                    </div>
+                    <div class="balance-item">
+                        <span class="label">Eve</span>
+                        <span class="value" id="eve-total">0</span>
+                        <span class="new-value" id="eve-new"></span>
+                    </div>
+                    <div class="balance-item">
+                        <span class="label">Flex</span>
+                        <span class="value" id="flex-total">0</span>
+                        <span class="new-value" id="flex-new"></span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="controls-section">
+                <button id="new-game-btn" class="btn">New Game</button>
+            </div>
+        </div>
+
+        <div class="game-content">
+            <div class="generators-row">
+                <div class="shop-section">
+                    <h3>⚡ NEW GENERATORS ⚡</h3>
+                    <div class="shop-cards" id="generator-shop"></div>
+                </div>
+                <div class="generators-section">
+                    <h3>⚡ GENERATORS ⚡</h3>
+                    <div class="generator-slots">
+                        <div class="card-slot generator-slot" data-slot="0"></div>
+                        <div class="card-slot generator-slot" data-slot="1"></div>
+                        <div class="card-slot generator-slot" data-slot="2"></div>
+                        <div class="card-slot generator-slot" data-slot="3"></div>
+                        <div class="card-slot generator-slot" data-slot="4"></div>
+                        <div class="card-slot generator-slot" data-slot="5"></div>
+                        <div class="card-slot generator-slot" data-slot="6"></div>
+                        <div class="card-slot generator-slot" data-slot="7"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="consumers-row">
+                <div class="shop-section">
+                    <h3>💡 NEW INCENTIVES 💡</h3>
+                    <div class="shop-cards" id="incentive-shop"></div>
+                </div>
+                <div class="consumers-section">
+                    <h3>🏠 CONSUMERS 🏠</h3>
+                    <div class="consumer-slots">
+                        <div class="card-slot consumer-slot" data-slot="0"></div>
+                        <div class="card-slot consumer-slot" data-slot="1"></div>
+                        <div class="card-slot consumer-slot" data-slot="2"></div>
+                        <div class="card-slot consumer-slot" data-slot="3"></div>
+                        <div class="card-slot consumer-slot" data-slot="4"></div>
+                        <div class="card-slot consumer-slot" data-slot="5"></div>
+                        <div class="card-slot consumer-slot" data-slot="6"></div>
+                        <div class="card-slot consumer-slot" data-slot="7"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="help-section">
+            <div class="game-instructions">
+                <span class="instructions-header">📖 Goal: Replace all fossil generators with clean energy! Click shop cards to place them, keep all values positive.</span>
+            </div>
+        </div>
+
+    </div>
+
+    <div id="win-modal" class="modal hidden">
+        <div class="modal-content">
+            <h2>🎉 CONGRATULATIONS! 🎉</h2>
+            <p>You have successfully decarbonised your power grid!</p>
+            <p>All fossil fuel generators have been replaced with clean energy.</p>
+            <div class="score-display">
+                <h3>Your Score: <span id="final-score">0</span> turns</h3>
+                <p class="score-subtitle">(Lower is better!)</p>
+            </div>
+            <button id="play-again-btn" class="btn">Play Again</button>
+        </div>
+    </div>
+
+
+
+    <script src="script.js"></script>
+</body>
+</html>
