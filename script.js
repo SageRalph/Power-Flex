@@ -178,7 +178,9 @@ function createCardElement(card, isShop = false, isFaceDown = false) {
                 playIncentiveImmediately(card);
             });
         } else {
-            // For other cards, use normal selection
+            // For generators, add hover effects and normal selection
+            cardDiv.addEventListener('mouseenter', () => showGeneratorHover(card));
+            cardDiv.addEventListener('mouseleave', () => clearGeneratorHover(card));
             cardDiv.addEventListener('click', () => {
                 console.log('Generator card clicked:', card.name);
                 selectCard(card);
@@ -464,12 +466,66 @@ function clearProjection() {
     });
 }
 
+// Show hover effect for generator cards
+function showGeneratorHover(card) {
+    if (card.type === "Incentive") return;
+    
+    // Clear all existing highlights first (except incentive-target)
+    document.querySelectorAll('.generator-slot').forEach(slot => {
+        slot.classList.remove('valid-drop', 'invalid-drop');
+    });
+    
+    // Highlight all generator slots where this card can be placed (same logic as selection)
+    document.querySelectorAll('.generator-slot').forEach(slot => {
+        const slotIndex = parseInt(slot.dataset.slot);
+        const existingCard = gameState.generators[slotIndex];
+        
+        // Skip slots with same generator type entirely
+        if (existingCard && existingCard.name === card.name) {
+            return; // Don't process same-type generators at all
+        }
+        
+        const canPlace = canPlaceCard(card, 'generator', slotIndex);
+        
+        if (canPlace) {
+            slot.classList.add('valid-drop');
+        } else {
+            slot.classList.add('invalid-drop');
+        }
+    });
+}
+
+// Clear hover effect for generator cards
+function clearGeneratorHover(card) {
+    if (card.type === "Incentive") return;
+    
+    // Don't clear highlighting if this card is currently selected
+    if (gameState.selectedCard && gameState.selectedCard.id === card.id) {
+        return;
+    }
+    
+    // Remove highlight from all generator slots
+    document.querySelectorAll('.generator-slot').forEach(slot => {
+        slot.classList.remove('valid-drop', 'invalid-drop');
+    });
+    
+    // If there's a different selected card, restore its highlighting
+    if (gameState.selectedCard && gameState.selectedCard.type !== "Incentive") {
+        showValidDropZones(gameState.selectedCard);
+    }
+}
+
 // Show hover effect for incentive cards
 function showIncentiveHover(card) {
     if (card.type !== "Incentive") return;
     
     const matchingConsumerType = getMatchingConsumerType(card.name);
     if (!matchingConsumerType) return;
+    
+    // Clear existing generator highlights first
+    document.querySelectorAll('.generator-slot').forEach(slot => {
+        slot.classList.remove('valid-drop', 'invalid-drop');
+    });
     
     // Find the slot with the matching consumer
     let targetSlot = -1;
@@ -498,6 +554,11 @@ function showIncentiveHover(card) {
 function clearIncentiveHover(card) {
     if (card.type !== "Incentive") return;
     
+    // Don't clear highlighting if this card is currently selected
+    if (gameState.selectedCard && gameState.selectedCard.id === card.id) {
+        return;
+    }
+    
     // Remove highlight from all slots
     document.querySelectorAll('.consumer-slot').forEach(slot => {
         slot.classList.remove('incentive-target');
@@ -505,6 +566,11 @@ function clearIncentiveHover(card) {
     
     // Clear projection
     clearProjection();
+    
+    // If there's a different selected card, restore its highlighting
+    if (gameState.selectedCard) {
+        showValidDropZones(gameState.selectedCard);
+    }
 }
 
 // Play incentive card immediately
@@ -546,6 +612,17 @@ function playIncentiveImmediately(card) {
     
     // Remove card from shop
     gameState.shop = gameState.shop.filter(c => c.id !== card.id);
+    
+    // Clear any selected card and its highlighting
+    if (gameState.selectedCard) {
+        gameState.selectedCard = null;
+        document.querySelectorAll('.card.selected').forEach(c => c.classList.remove('selected'));
+        document.querySelectorAll('.card-slot').forEach(slot => {
+            slot.classList.remove('valid-drop', 'invalid-drop', 'incentive-target');
+            slot.onmouseenter = null;
+            slot.onmouseleave = null;
+        });
+    }
     
     // Clear any hover effects
     clearIncentiveHover(card);
