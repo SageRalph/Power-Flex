@@ -3,18 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Balance and decarbonise your power grid in this educational card game about sustainable energy management.">
     <title>POWER FLEX - Grid Balancing Game</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div class="game-container">
-        <div class="top-bar">
+        <header class="top-bar">
             <div class="title-section">
                 <h1>⚡ POWER FLEX</h1>
                 <span class="subtitle">Balance and decarbonise your power grid</span>
             </div>
             
-            <div class="balance-section">
+            <section class="balance-section" aria-label="Grid Balance Display">
                 <span class="balance-title">Grid Balance:</span>
                 <div class="balance-display">
                     <div class="balance-item">
@@ -38,16 +39,16 @@
                         <span class="new-value" id="flex-new"></span>
                     </div>
                 </div>
-            </div>
+            </section>
             
             <div class="controls-section">
                 <button id="new-game-btn" class="btn">New Game</button>
             </div>
-        </div>
+        </header>
 
-        <div class="game-content">
+        <main class="game-content">
             <div class="play-areas-row">
-                <div class="generators-section">
+                <section class="generators-section" aria-label="Generator Grid">
                     <h3>⚡ GENERATORS ⚡</h3>
                     <div class="generator-slots">
                         <div class="card-slot generator-slot" data-slot="0"></div>
@@ -59,8 +60,8 @@
                         <div class="card-slot generator-slot" data-slot="6"></div>
                         <div class="card-slot generator-slot" data-slot="7"></div>
                     </div>
-                </div>
-                <div class="consumers-section">
+                </section>
+                <section class="consumers-section" aria-label="Consumer Grid">
                     <h3>🏠 CONSUMERS 🏠</h3>
                     <div class="consumer-slots">
                         <div class="card-slot consumer-slot" data-slot="0"></div>
@@ -72,20 +73,20 @@
                         <div class="card-slot consumer-slot" data-slot="6"></div>
                         <div class="card-slot consumer-slot" data-slot="7"></div>
                     </div>
-                </div>
+                </section>
             </div>
 
             <div class="shops-row">
-                <div class="shop-section">
+                <section class="shop-section" aria-label="Generator Shop">
                     <h3>⚡ NEW GENERATORS ⚡</h3>
-                    <div class="shop-cards" id="generator-shop"></div>
-                </div>
-                <div class="shop-section">
+                    <div class="shop-cards" id="generator-shop" role="group" aria-label="Available Generators"></div>
+                </section>
+                <section class="shop-section" aria-label="Incentive Shop">
                     <h3>💡 NEW INCENTIVES 💡</h3>
-                    <div class="shop-cards" id="incentive-shop"></div>
-                </div>
+                    <div class="shop-cards" id="incentive-shop" role="group" aria-label="Available Incentives"></div>
+                </section>
             </div>
-        </div>
+        </main>
 
         <div class="goal-section">
             <p>📖 Goal: Replace all fossil generators with clean energy! Click shop cards to place them, keep all values positive.</p>

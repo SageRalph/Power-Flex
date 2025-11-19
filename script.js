@@ -1,3 +1,35 @@
+// Game Configuration
+const CONFIG = {
+    GRID_SIZE: 8,
+    INITIAL_FOSSIL_COUNT: 4,
+    INITIAL_REVEALED_CONSUMERS: 4,
+    STAT_TYPES: ['night', 'day', 'eve', 'flex']
+};
+
+/**
+ * Create a stat row DOM element for a card
+ * @param {Object} card - Card data
+ * @param {string} stat - Stat type (night, day, eve, flex)
+ * @returns {HTMLElement} Stat row element
+ */
+function createStatRow(card, stat) {
+    const statRow = document.createElement('div');
+    statRow.className = 'stat-row';
+    
+    const label = document.createElement('span');
+    label.className = 'stat-label';
+    label.textContent = stat.charAt(0).toUpperCase() + stat.slice(1);
+    
+    const value = document.createElement('span');
+    value.className = `stat-value ${card[stat] >= 0 ? 'positive' : 'negative'}`;
+    value.textContent = card[stat] >= 0 ? `+${card[stat]}` : card[stat];
+    
+    statRow.appendChild(label);
+    statRow.appendChild(value);
+    
+    return statRow;
+}
+
 // Card data from CSV
 const cardData = [
     {name: "Solar", type: "Generator", night: 1, day: 4, eve: 1, flex: -1},
@@ -24,26 +56,32 @@ const cardData = [
     {name: "Passive Cooling", type: "Incentive", night: 0, day: -1, eve: -1, flex: 0}
 ];
 
+// Incentive to Consumer mapping
+const INCENTIVE_MAP = {
+    "Adaptive Servers": "Data Centre",
+    "Smart Grid": "Infrastructure", 
+    "Smart Appliances": "Appliances",
+    "Smart Industry": "Industry",
+    "Smart EVs": "EVs",
+    "LED Lights": "Lights",
+    "Heat Pumps": "Heating",
+    "Passive Cooling": "AC"
+};
+
 // Helper function to get matching consumer type for incentives
 function getMatchingConsumerType(incentiveName) {
-    const incentiveMap = {
-        "Adaptive Servers": "Data Centre",
-        "Smart Grid": "Infrastructure",
-        "Smart Appliances": "Appliances",
-        "Smart Industry": "Industry",
-        "Smart EVs": "EVs",
-        "LED Lights": "Lights",
-        "Heat Pumps": "Heating",
-        "Passive Cooling": "AC"
-    };
-    return incentiveMap[incentiveName] || null;
+    return INCENTIVE_MAP[incentiveName] || null;
 }
 
-// Check if a card can be placed anywhere on the grid
+/**
+ * Check if a card can be placed anywhere on the grid without causing instability
+ * @param {Object} card - The card to check placement for
+ * @returns {boolean} True if card can be placed somewhere, false otherwise
+ */
 function canCardBePlacedAnywhere(card) {
     if (card.type === "Generator" || card.type === "Big Generator") {
         // Check all generator slots - generators can go in empty slots or replace different generators
-        for (let i = 0; i < 8; i++) {
+        for (let i = 0; i < CONFIG.GRID_SIZE; i++) {
             const existingCard = gameState.generators[i];
             // Can place if slot is empty OR has a different generator type
             if ((!existingCard || existingCard.name !== card.name) && canPlaceCard(card, 'generator', i)) {
@@ -53,7 +91,7 @@ function canCardBePlacedAnywhere(card) {
     } else if (card.type === "Incentive") {
         // Check all consumer slots for matching type
         const matchingConsumerType = getMatchingConsumerType(card.name);
-        for (let i = 0; i < 8; i++) {
+        for (let i = 0; i < CONFIG.GRID_SIZE; i++) {
             const consumer = gameState.consumers[i];
             if (consumer && consumer.name === matchingConsumerType && canPlaceCard(card, 'consumer', i)) {
                 return true;
@@ -66,28 +104,31 @@ function canCardBePlacedAnywhere(card) {
 // Game state
 let gameState = {
     turn: 1,
-    generators: new Array(8).fill(null),
-    consumers: new Array(8).fill(null),
+    generators: new Array(CONFIG.GRID_SIZE).fill(null),
+    consumers: new Array(CONFIG.GRID_SIZE).fill(null),
     shop: [],
     selectedCard: null,
     gameWon: false,
     usedConsumers: new Set()
 };
 
-// Initialize the game
+/**
+ * Initialize the game state and set up initial cards
+ */
 function initGame() {
-    gameState = {
-        turn: 1,
-        generators: new Array(8).fill(null),
-        consumers: new Array(8).fill(null),
-        shop: [],
-        selectedCard: null,
-        gameWon: false,
-        usedConsumers: new Set()
-    };
+    try {
+        gameState = {
+            turn: 1,
+            generators: new Array(CONFIG.GRID_SIZE).fill(null),
+            consumers: new Array(CONFIG.GRID_SIZE).fill(null),
+            shop: [],
+            selectedCard: null,
+            gameWon: false,
+            usedConsumers: new Set()
+        };
 
     // Place initial fossil generators
-    for (let i = 0; i < 4; i++) {
+    for (let i = 0; i < CONFIG.INITIAL_FOSSIL_COUNT; i++) {
         gameState.generators[i] = {
             ...cardData.find(card => card.name === "Fossil"),
             id: `fossil-${i}`
@@ -98,21 +139,24 @@ function initGame() {
     const consumerCards = cardData.filter(card => card.type === "Consumer");
     const shuffledConsumers = [...consumerCards].sort(() => Math.random() - 0.5);
     
-    for (let i = 0; i < 8; i++) {
+    for (let i = 0; i < CONFIG.GRID_SIZE; i++) {
         if (i < shuffledConsumers.length) {
             gameState.consumers[i] = {
                 ...shuffledConsumers[i],
                 id: `consumer-${i}`,
-                faceDown: i >= 4 // First 4 are revealed, rest are face-down
+                faceDown: i >= CONFIG.INITIAL_REVEALED_CONSUMERS // First 4 are revealed, rest are face-down
             };
             gameState.usedConsumers.add(shuffledConsumers[i].name);
         }
     }
 
-    // Initialize shop with all generators (including fossil), big generators, and available incentives
-    updateShopInventory();
+        // Initialize shop with all generators (including fossil), big generators, and available incentives
+        updateShopInventory();
 
-    updateDisplay();
+        updateDisplay();
+    } catch (error) {
+        console.error('Error initializing game:', error);
+    }
 }
 
 // Update shop inventory based on current grid state
@@ -149,7 +193,13 @@ function updateShopInventory() {
     });
 }
 
-// Create card element
+/**
+ * Create a DOM element for a card with all styling and event listeners
+ * @param {Object} card - Card data object
+ * @param {boolean} isShop - Whether this card is in the shop (adds interactions)
+ * @param {boolean} isFaceDown - Whether to show card face-down
+ * @returns {HTMLElement} Complete card DOM element
+ */
 function createCardElement(card, isShop = false, isFaceDown = false) {
     const cardDiv = document.createElement('div');
     cardDiv.className = `card ${card.type.toLowerCase().replace(' ', '-')}`;
@@ -169,22 +219,26 @@ function createCardElement(card, isShop = false, isFaceDown = false) {
             cardDiv.classList.add('unselectable');
         }
         
-        if (card.type === "Incentive") {
-            // For incentives, add hover effects and immediate play
-            cardDiv.addEventListener('mouseenter', () => showIncentiveHover(card));
-            cardDiv.addEventListener('mouseleave', () => clearIncentiveHover(card));
-            cardDiv.addEventListener('click', () => {
-                console.log('Incentive card clicked:', card.name);
-                playIncentiveImmediately(card);
-            });
-        } else {
-            // For generators, add hover effects and normal selection
-            cardDiv.addEventListener('mouseenter', () => showGeneratorHover(card));
-            cardDiv.addEventListener('mouseleave', () => clearGeneratorHover(card));
-            cardDiv.addEventListener('click', () => {
-                console.log('Generator card clicked:', card.name);
-                selectCard(card);
-            });
+        try {
+            if (card.type === "Incentive") {
+                // For incentives, add hover effects and immediate play
+                cardDiv.addEventListener('mouseenter', () => showIncentiveHover(card));
+                cardDiv.addEventListener('mouseleave', () => clearIncentiveHover(card));
+                cardDiv.addEventListener('click', () => {
+                    console.log('Incentive card clicked:', card.name);
+                    playIncentiveImmediately(card);
+                });
+            } else {
+                // For generators, add hover effects and normal selection
+                cardDiv.addEventListener('mouseenter', () => showGeneratorHover(card));
+                cardDiv.addEventListener('mouseleave', () => clearGeneratorHover(card));
+                cardDiv.addEventListener('click', () => {
+                    console.log('Generator card clicked:', card.name);
+                    selectCard(card);
+                });
+            }
+        } catch (error) {
+            console.error('Error adding event listeners to card:', error);
         }
     }
 
@@ -206,21 +260,8 @@ function createCardElement(card, isShop = false, isFaceDown = false) {
     statsDiv.className = 'card-stats';
     
     // Create stat rows
-    ['night', 'day', 'eve', 'flex'].forEach(stat => {
-        const statRow = document.createElement('div');
-        statRow.className = 'stat-row';
-        
-        const label = document.createElement('span');
-        label.className = 'stat-label';
-        label.textContent = stat.charAt(0).toUpperCase() + stat.slice(1);
-        
-        const value = document.createElement('span');
-        value.className = `stat-value ${card[stat] >= 0 ? 'positive' : 'negative'}`;
-        value.textContent = card[stat] >= 0 ? `+${card[stat]}` : card[stat];
-        
-        statRow.appendChild(label);
-        statRow.appendChild(value);
-        statsDiv.appendChild(statRow);
+    CONFIG.STAT_TYPES.forEach(stat => {
+        statsDiv.appendChild(createStatRow(card, stat));
     });
     
     cardHeader.appendChild(nameDiv);
@@ -241,7 +282,10 @@ function createCardElement(card, isShop = false, isFaceDown = false) {
     return cardDiv;
 }
 
-// Select card from shop
+/**
+ * Select a card from the shop for placement
+ * @param {Object} card - Card to select
+ */
 function selectCard(card) {
     console.log('Attempting to select card:', card.name, card.type);
     
@@ -333,9 +377,17 @@ function showValidDropZones(card) {
     }
 }
 
-// Check if a card can be placed
+/**
+ * Check if a specific card can be placed in a specific slot
+ * @param {Object} card - Card to place
+ * @param {string} slotType - 'generator' or 'consumer'
+ * @param {number} slotIndex - Index of the slot
+ * @returns {boolean} True if placement is valid
+ */
 function canPlaceCard(card, slotType, slotIndex) {
-    if (!card) return false;
+    if (!card || slotIndex < 0 || slotIndex >= CONFIG.GRID_SIZE) {
+        return false;
+    }
 
     // Check if trying to replace a card with itself
     if (slotType === 'generator') {
@@ -803,28 +855,10 @@ function updateShop() {
         if (consumer && consumer.type === "Consumer") {
             if (consumer.faceDown) {
                 // Show the actual incentive face-down if consumer is face-down
-                const matchingIncentiveType = Object.keys({
-                    "Data Centre": "Adaptive Servers",
-                    "Infrastructure": "Smart Grid", 
-                    "Appliances": "Smart Appliances",
-                    "Industry": "Smart Industry",
-                    "EVs": "Smart EVs",
-                    "Lights": "LED Lights",
-                    "Heating": "Heat Pumps",
-                    "AC": "Passive Cooling"
-                }).find(key => key === consumer.name);
+                // Find matching incentive for this consumer type
+                const incentiveName = Object.keys(INCENTIVE_MAP).find(key => INCENTIVE_MAP[key] === consumer.name);
                 
-                if (matchingIncentiveType) {
-                    const incentiveName = {
-                        "Data Centre": "Adaptive Servers",
-                        "Infrastructure": "Smart Grid",
-                        "Appliances": "Smart Appliances", 
-                        "Industry": "Smart Industry",
-                        "EVs": "Smart EVs",
-                        "Lights": "LED Lights",
-                        "Heating": "Heat Pumps",
-                        "AC": "Passive Cooling"
-                    }[consumer.name];
+                if (incentiveName) {
                     
                     const incentiveData = cardData.find(card => card.name === incentiveName);
                     if (incentiveData) {

@@ -1,3 +1,29 @@
+:root {
+    /* Color Palette */
+    --color-primary: #0f0f23;
+    --color-secondary: #1a1a3a;
+    --color-accent: #4CAF50;
+    --color-text: #fff;
+    --color-text-muted: #aaa;
+    --color-gold: #FFD700;
+    --color-positive: #90EE90;
+    --color-negative: #FFA500;
+    --color-invalid: #FF4444;
+    
+    /* Spacing */
+    --spacing-xs: 2px;
+    --spacing-sm: 4px;
+    --spacing-md: 8px;
+    --spacing-lg: 12px;
+    --spacing-xl: 16px;
+    --spacing-xxl: 20px;
+    
+    /* Border Radius */
+    --radius-sm: 4px;
+    --radius-md: 6px;
+    --radius-lg: 8px;
+}
+
 * {
     box-sizing: border-box;
     margin: 0;
@@ -7,8 +33,8 @@
 
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: #0f0f23;
-    color: #fff;
+    background: var(--color-primary);
+    color: var(--color-text);
     min-height: 100vh;
     margin: 0;
     padding: 0;
@@ -18,28 +44,28 @@ body {
 .game-container {
     display: grid;
     grid-template-columns: 1fr;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto auto auto;
     grid-template-areas:
         "header"
         "content"
         "help";
-    min-height: 100vh;
-    gap: 12px;
-    padding: 16px;
+    gap: var(--spacing-md);
+    padding: var(--spacing-xl);
     max-width: 1200px;
     margin: 0 auto;
 }
 
-.top-bar {
+.top-bar,
+header.top-bar {
     grid-area: header;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: linear-gradient(135deg, #1a1a3a, #2d2d5f);
-    padding: 8px 16px;
-    border-radius: 8px;
+    background: linear-gradient(135deg, var(--color-secondary), #2d2d5f);
+    padding: var(--spacing-md) var(--spacing-xl);
+    border-radius: var(--radius-lg);
     border: 1px solid #333;
-    gap: 20px;
+    gap: var(--spacing-xxl);
 }
 
 .title-section {
@@ -195,11 +221,11 @@ body {
 }
 
 .btn {
-    background: #4CAF50;
+    background: var(--color-accent);
     color: white;
     border: none;
-    padding: 12px 20px;
-    border-radius: 6px;
+    padding: var(--spacing-lg) var(--spacing-xxl);
+    border-radius: var(--radius-md);
     cursor: pointer;
     font-size: 1em;
     transition: background 0.3s;
@@ -214,11 +240,12 @@ body {
     cursor: not-allowed;
 }
 
-.game-content {
+.game-content,
+main.game-content {
     grid-area: content;
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: var(--spacing-md);
 }
 
 .play-areas-row {
@@ -547,18 +574,18 @@ body {
 .goal-section {
     grid-area: help;
     text-align: center;
-    padding: 6px;
-    color: #FFD700;
+    padding: var(--spacing-md);
+    color: var(--color-gold);
     font-size: 0.9em;
-    margin-bottom: 2px;
+    margin-bottom: var(--spacing-xs);
 }
 
 .attribution-section {
     text-align: center;
-    padding: 4px;
+    padding: var(--spacing-sm);
     font-size: 0.8em;
-    color: #aaa;
-    margin-bottom: 4px;
+    color: var(--color-text-muted);
+    margin-bottom: var(--spacing-sm);
 }
 
 .attribution-section a {
