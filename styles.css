@@ -356,7 +356,15 @@ main.game-content {
     cursor: pointer;
 }
 
-.shop-section .card:hover {
+.shop-section .card:not(.face-down) {
+    cursor: pointer;
+}
+
+.shop-section .card.face-down {
+    cursor: default;
+}
+
+.shop-section .card:hover:not(.face-down) {
     transform: translateY(-5px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
@@ -483,19 +491,19 @@ main.game-content {
     color: #333;
     text-align: center;
     padding: 2px 4px;
-    font-size: 0.65em;
+    font-size: 0.75em;
     font-weight: bold;
     margin-top: 1px;
 }
 
 .card-header {
     background: #5a67d8;
-    padding: 2px 4px;
+    padding: 1px 4px 2px 4px;
     border-bottom: 1px solid #ddd;
 }
 
 .card-type {
-    font-size: 0.45em;
+    font-size: 0.55em;
     font-weight: normal;
     text-align: center;
     color: rgba(255, 255, 255, 0.8);
@@ -505,7 +513,7 @@ main.game-content {
 }
 
 .card-name {
-    font-size: 0.6em;
+    font-size: 0.75em;
     font-weight: bold;
     margin-bottom: 1px;
     text-align: center;
@@ -514,7 +522,7 @@ main.game-content {
     line-height: 1;
     word-wrap: break-word;
     hyphens: auto;
-    min-height: 14px;
+    min-height: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -530,33 +538,41 @@ main.game-content {
 
 .card-stats {
     flex: 1;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
     gap: 1px;
     margin-top: 2px;
 }
 
 .stat-row {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
     background: #fff;
-    padding: 2px 4px;
+    padding: 1px 2px;
     border-radius: 3px;
     border: 1px solid #e0e0e0;
-    font-size: 0.55em;
+    font-size: 0.8em;
     box-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+    min-height: 28px;
 }
 
 .stat-label {
     font-weight: bold;
     color: #333;
     text-transform: capitalize;
+    font-size: 0.85em;
+    line-height: 1;
+    margin-bottom: 1px;
 }
 
 .stat-value {
     font-weight: bold;
     color: #333;
+    font-size: 1.1em;
+    line-height: 1;
 }
 
 .stat-value.positive {
