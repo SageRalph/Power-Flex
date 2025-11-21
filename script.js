@@ -282,45 +282,8 @@ function createCardElement(card, isShop = false, isFaceDown = false) {
                     console.log('Drag ended:', card.name);
                 });
                 
-                if (card.type === "Incentive") {
-                    // For incentives, add hover effects and click-to-hold
-                    cardDiv.addEventListener('mouseenter', () => {
-                        if (!gameState.heldCard && canCardBePlacedAnywhere(card)) {
-                            showIncentiveHover(card);
-                        }
-                    });
-                    cardDiv.addEventListener('mouseleave', () => {
-                        if (!gameState.heldCard && canCardBePlacedAnywhere(card)) {
-                            clearIncentiveHover(card);
-                        }
-                    });
-                    cardDiv.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        console.log('Incentive card clicked:', card.name);
-                        if (canCardBePlacedAnywhere(card)) {
-                            pickUpCard(card, cardDiv, e);
-                        }
-                    });
-                } else {
-                    // For generators, add hover effects and click-to-hold
-                    cardDiv.addEventListener('mouseenter', () => {
-                        if (!gameState.heldCard && canCardBePlacedAnywhere(card)) {
-                            showGeneratorHover(card);
-                        }
-                    });
-                    cardDiv.addEventListener('mouseleave', () => {
-                        if (!gameState.heldCard && canCardBePlacedAnywhere(card)) {
-                            clearGeneratorHover(card);
-                        }
-                    });
-                    cardDiv.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        console.log('Generator card clicked:', card.name);
-                        if (canCardBePlacedAnywhere(card)) {
-                            pickUpCard(card, cardDiv, e);
-                        }
-                    });
-                }
+                // Add consolidated interaction handlers
+                addCardInteractionHandlers(cardDiv, card);
             }
         } catch (error) {
             console.error('Error adding event listeners to card:', error);
@@ -684,95 +647,34 @@ function addSlotListeners() {
             }
         });
         
-        // Held card hover handlers for projections (don't interfere with global highlighting)
-        slot.addEventListener('mouseenter', () => {
-            if (gameState.heldCard && (gameState.heldCard.type === "Generator" || gameState.heldCard.type === "Big Generator")) {
-                const canPlace = canPlaceCard(gameState.heldCard, 'generator', index);
-                showProjection(gameState.heldCard, 'generator', index, canPlace);
-                // Don't modify slot classes here - they're managed by showGeneratorHover
-            }
-        });
-        
-        slot.addEventListener('mouseleave', () => {
-            if (gameState.heldCard && (gameState.heldCard.type === "Generator" || gameState.heldCard.type === "Big Generator")) {
-                clearProjection();
-                // Don't remove slot classes here - they're managed by showGeneratorHover
-            }
-        });
-        
-        // Drag and drop handlers
-        slot.addEventListener('dragover', (e) => {
-            const cardData = getDraggedCardData(e);
-            if (cardData && (cardData.type === "Generator" || cardData.type === "Big Generator")) {
-                e.preventDefault();
-                if (canPlaceCard(cardData, 'generator', index)) {
-                    e.dataTransfer.dropEffect = 'move';
+        // Consolidated held card hover handlers  
+        addHeldCardHoverHandlers(
+            slot,
+            index,
+            (heldCard) => heldCard && (heldCard.type === "Generator" || heldCard.type === "Big Generator"),
+            (heldCard, slotIndex, isEntering) => {
+                if (isEntering) {
+                    const canPlace = canPlaceCard(heldCard, 'generator', slotIndex);
+                    showProjection(heldCard, 'generator', slotIndex, canPlace);
                 } else {
-                    e.dataTransfer.dropEffect = 'none';
-                }
-            }
-        });
-        
-        slot.addEventListener('dragenter', (e) => {
-            const cardData = getDraggedCardData(e);
-            if (cardData && (cardData.type === "Generator" || cardData.type === "Big Generator")) {
-                const canPlace = canPlaceCard(cardData, 'generator', index);
-                e.preventDefault();
-                if (canPlace) {
-                    slot.classList.add('drag-over');
-                }
-                // Show projection for dragged generator (valid or invalid)
-                showProjection(cardData, 'generator', index, canPlace);
-            }
-        });
-        
-        slot.addEventListener('dragleave', (e) => {
-            if (!slot.contains(e.relatedTarget)) {
-                slot.classList.remove('drag-over');
-                // Clear projection when leaving slot
-                const cardData = getDraggedCardData(e);
-                if (cardData && (cardData.type === "Generator" || cardData.type === "Big Generator")) {
                     clearProjection();
                 }
             }
-        });
+        );
         
-        slot.addEventListener('drop', (e) => {
-            e.preventDefault();
-            slot.classList.remove('drag-over');
-            
-            try {
-                const cardData = JSON.parse(e.dataTransfer.getData('application/json'));
-                console.log('Card dropped on generator slot:', index, cardData.name);
-                
-                if ((cardData.type === "Generator" || cardData.type === "Big Generator") && canPlaceCard(cardData, 'generator', index)) {
-                    // Place the card directly
-                    if (cardData.type === "Big Generator") {
-                        gameState.generators[index] = { ...cardData, faceDown: true };
-                    } else {
-                        gameState.generators[index] = cardData;
-                    }
-                    
-                    // Remove card from shop
-                    gameState.shop = gameState.shop.filter(c => c.id !== cardData.id);
-                    
-                    // Clear any remaining drag highlights and projections
-                    clearAllDragHighlights();
-                    clearProjection();
-                    
-                    updateShopInventory();
-                    updateDisplay();
-                    checkWinCondition();
-                    
-                    if (!gameState.gameWon) {
-                        updateGameStatus("Card placed! Advancing to next turn...");
-                        setTimeout(nextTurn, 1000);
-                    }
+        // Consolidated drag and drop handlers
+        addDragHandlers(
+            slot, 
+            index, 
+            'generator',
+            (cardData) => cardData && (cardData.type === "Generator" || cardData.type === "Big Generator"),
+            (cardData, slotIndex) => {
+                if (canPlaceCard(cardData, 'generator', slotIndex)) {
+                    handleCardPlacement(cardData, 'generator', slotIndex);
                 }
-            } catch (error) {
-                console.error('Error handling drop:', error);
             }
-        });
+        );
+
     });
     
     // Consumer slots
@@ -790,97 +692,34 @@ function addSlotListeners() {
             }
         });
         
-        // Held card hover handlers for incentive projections
-        slot.addEventListener('mouseenter', () => {
-            if (gameState.heldCard && gameState.heldCard.type === "Incentive") {
-                const canPlace = canPlaceCard(gameState.heldCard, 'consumer', index);
-                if (canPlace) {
-                    slot.classList.add('incentive-target');
-                }
-            }
-        });
-        
-        slot.addEventListener('mouseleave', () => {
-            if (gameState.heldCard && gameState.heldCard.type === "Incentive") {
-                slot.classList.remove('incentive-target');
-            }
-        });
-        
-        // Held card hover handlers for incentive projections
-        slot.addEventListener('mouseenter', () => {
-            if (gameState.heldCard && gameState.heldCard.type === "Incentive") {
-                const canPlace = canPlaceCard(gameState.heldCard, 'consumer', index);
-                if (canPlace) {
-                    slot.classList.add('incentive-target');
-                }
-            }
-        });
-        
-        slot.addEventListener('mouseleave', () => {
-            if (gameState.heldCard && gameState.heldCard.type === "Incentive") {
-                slot.classList.remove('incentive-target');
-            }
-        });
-        
-        // Drag and drop handlers - use proper incentive targeting
-        slot.addEventListener('dragover', (e) => {
-            const cardData = getDraggedCardData(e);
-            if (cardData && cardData.type === "Incentive" && canIncentiveTargetSlot(cardData, index)) {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = 'move';
-            }
-        });
-        
-        slot.addEventListener('dragenter', (e) => {
-            const cardData = getDraggedCardData(e);
-            if (cardData && cardData.type === "Incentive" && canIncentiveTargetSlot(cardData, index)) {
-                e.preventDefault();
-                slot.classList.add('drag-over');
-            }
-        });
-        
-        slot.addEventListener('dragleave', (e) => {
-            if (!slot.contains(e.relatedTarget)) {
-                slot.classList.remove('drag-over');
-            }
-        });
-        
-        slot.addEventListener('drop', (e) => {
-            e.preventDefault();
-            slot.classList.remove('drag-over');
-            
-            try {
-                const cardData = JSON.parse(e.dataTransfer.getData('application/json'));
-                console.log('Card dropped on consumer slot:', index, cardData.name);
-                
-                if (cardData.type === "Incentive" && canIncentiveTargetSlot(cardData, index)) {
-                    // Place the incentive card directly
-                    const existingConsumer = gameState.consumers[index];
-                    const matchingConsumerType = getMatchingConsumerType(cardData.name);
-                    if (existingConsumer && existingConsumer.name === matchingConsumerType) {
-                        gameState.consumers[index] = cardData;
-                        
-                        // Remove card from shop
-                        gameState.shop = gameState.shop.filter(c => c.id !== cardData.id);
-                        
-                        // Clear any remaining drag highlights and incentive hover highlights
-                        clearAllDragHighlights();
-                        
-                        updateShopInventory();
-                        updateDisplay();
-                        checkWinCondition();
-                        
-                        if (!gameState.gameWon) {
-                            updateGameStatus("Card placed! Advancing to next turn...");
-                            setTimeout(nextTurn, 1000);
-                        }
-                    }
+        // Consolidated drag and drop handlers
+        addDragHandlers(
+            slot,
+            index,
+            'consumer',
+            (cardData) => cardData && cardData.type === "Incentive" && canIncentiveTargetSlot(cardData, index),
+            (cardData, slotIndex) => {
+                if (canIncentiveTargetSlot(cardData, slotIndex)) {
+                    handleCardPlacement(cardData, 'consumer', slotIndex);
                     clearIncentiveHover(cardData);
                 }
-            } catch (error) {
-                console.error('Error handling drop:', error);
             }
-        });
+        );
+        
+        // Consolidated held card hover handlers
+        addHeldCardHoverHandlers(
+            slot,
+            index,
+            (heldCard) => heldCard && heldCard.type === "Incentive",
+            (heldCard, slotIndex, isEntering) => {
+                const canPlace = canPlaceCard(heldCard, 'consumer', slotIndex);
+                if (isEntering && canPlace) {
+                    slot.classList.add('incentive-target');
+                } else if (!isEntering) {
+                    slot.classList.remove('incentive-target');
+                }
+            }
+        );
     });
 }
 
@@ -1065,6 +904,141 @@ function putDownHeldCard() {
     // Remove global listeners
     document.removeEventListener('mousemove', updateHeldCardPosition);
     document.removeEventListener('click', handleHeldCardClick);
+}
+
+/**
+ * Add interaction handlers to a card element
+ * @param {HTMLElement} cardDiv - The card element
+ * @param {Object} card - The card data
+ */
+function addCardInteractionHandlers(cardDiv, card) {
+    const isIncentive = card.type === "Incentive";
+    const hoverShowFn = isIncentive ? showIncentiveHover : showGeneratorHover;
+    const hoverClearFn = isIncentive ? clearIncentiveHover : clearGeneratorHover;
+    
+    cardDiv.addEventListener('mouseenter', () => {
+        if (!gameState.heldCard && canCardBePlacedAnywhere(card)) {
+            hoverShowFn(card);
+        }
+    });
+    
+    cardDiv.addEventListener('mouseleave', () => {
+        if (!gameState.heldCard && canCardBePlacedAnywhere(card)) {
+            hoverClearFn(card);
+        }
+    });
+    
+    cardDiv.addEventListener('click', (e) => {
+        e.stopPropagation();
+        console.log(`${card.type} card clicked:`, card.name);
+        if (canCardBePlacedAnywhere(card)) {
+            pickUpCard(card, cardDiv, e);
+        }
+    });
+}
+
+/**
+ * Create drag event handlers for a slot
+ * @param {HTMLElement} slot - The slot element
+ * @param {number} index - The slot index
+ * @param {string} slotType - 'generator' or 'consumer'
+ * @param {Function} validationFn - Function to check if card can be placed
+ * @param {Function} placementFn - Function to handle card placement
+ */
+function addDragHandlers(slot, index, slotType, validationFn, placementFn) {
+    slot.addEventListener('dragover', (e) => {
+        const cardData = getDraggedCardData(e);
+        if (cardData && validationFn(cardData, index)) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = canPlaceCard(cardData, slotType, index) ? 'move' : 'none';
+        }
+    });
+    
+    slot.addEventListener('dragenter', (e) => {
+        const cardData = getDraggedCardData(e);
+        if (cardData && validationFn(cardData, index)) {
+            e.preventDefault();
+            const canPlace = canPlaceCard(cardData, slotType, index);
+            if (canPlace) {
+                slot.classList.add('drag-over');
+            }
+            showProjection(cardData, slotType, index, canPlace);
+        }
+    });
+    
+    slot.addEventListener('dragleave', (e) => {
+        if (!slot.contains(e.relatedTarget)) {
+            slot.classList.remove('drag-over');
+            clearProjection();
+        }
+    });
+    
+    slot.addEventListener('drop', (e) => {
+        e.preventDefault();
+        slot.classList.remove('drag-over');
+        
+        try {
+            const cardData = JSON.parse(e.dataTransfer.getData('application/json'));
+            if (validationFn(cardData, index)) {
+                placementFn(cardData, index);
+            }
+            clearAllDragHighlights();
+            clearProjection();
+        } catch (error) {
+            console.error('Error handling drop:', error);
+        }
+    });
+}
+
+/**
+ * Create held card hover handlers for a slot
+ * @param {HTMLElement} slot - The slot element
+ * @param {number} index - The slot index
+ * @param {Function} validationFn - Function to check if held card matches this slot
+ * @param {Function} hoverFn - Function to handle hover effects
+ */
+function addHeldCardHoverHandlers(slot, index, validationFn, hoverFn) {
+    slot.addEventListener('mouseenter', () => {
+        if (gameState.heldCard && validationFn(gameState.heldCard, index)) {
+            hoverFn(gameState.heldCard, index, true);
+        }
+    });
+    
+    slot.addEventListener('mouseleave', () => {
+        if (gameState.heldCard && validationFn(gameState.heldCard, index)) {
+            hoverFn(gameState.heldCard, index, false);
+        }
+    });
+}
+
+/**
+ * Handle card placement after drag/drop
+ * @param {Object} cardData - The card data
+ * @param {string} slotType - 'generator' or 'consumer'
+ * @param {number} index - The slot index
+ */
+function handleCardPlacement(cardData, slotType, index) {
+    if (slotType === 'generator') {
+        if (cardData.type === "Big Generator") {
+            gameState.generators[index] = { ...cardData, faceDown: true };
+        } else {
+            gameState.generators[index] = cardData;
+        }
+    } else if (slotType === 'consumer' && cardData.type === "Incentive") {
+        gameState.consumers[index] = cardData;
+    }
+    
+    // Remove card from shop
+    gameState.shop = gameState.shop.filter(c => c.id !== cardData.id);
+    
+    updateShopInventory();
+    updateDisplay();
+    checkWinCondition();
+    
+    if (!gameState.gameWon) {
+        updateGameStatus("Card placed! Advancing to next turn...");
+        setTimeout(nextTurn, 1000);
+    }
 }
 
 /**
