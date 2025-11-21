@@ -7,26 +7,32 @@ const CONFIG = {
 };
 
 /**
+ * Helper function to create DOM elements with class and content
+ * @param {string} tagName - HTML tag name
+ * @param {string} className - CSS class name
+ * @param {string} textContent - Text content (optional)
+ * @returns {HTMLElement} Created element
+ */
+function createElement(tagName, className, textContent = '') {
+    const element = document.createElement(tagName);
+    element.className = className;
+    if (textContent) element.textContent = textContent;
+    return element;
+}
+
+/**
  * Create a stat row DOM element for a card
  * @param {Object} card - Card data
  * @param {string} stat - Stat type (night, day, eve, flex)
  * @returns {HTMLElement} Stat row element
  */
 function createStatRow(card, stat) {
-    const statRow = document.createElement('div');
-    statRow.className = 'stat-row';
-    
-    const label = document.createElement('span');
-    label.className = 'stat-label';
-    label.textContent = stat.charAt(0).toUpperCase() + stat.slice(1);
-    
-    const value = document.createElement('span');
-    value.className = `stat-value ${card[stat] >= 0 ? 'positive' : 'negative'}`;
-    value.textContent = card[stat] >= 0 ? `+${card[stat]}` : card[stat];
+    const statRow = createElement('div', 'stat');
+    const label = createElement('span', 'stat__label', stat.charAt(0).toUpperCase() + stat.slice(1));
+    const value = createElement('span', `stat__value ${card[stat] >= 0 ? 'stat__value--positive' : 'stat__value--negative'}`, card[stat] >= 0 ? `+${card[stat]}` : card[stat]);
     
     statRow.appendChild(label);
     statRow.appendChild(value);
-    
     return statRow;
 }
 
@@ -71,6 +77,17 @@ const INCENTIVE_MAP = {
 // Helper function to get matching consumer type for incentives
 function getMatchingConsumerType(incentiveName) {
     return INCENTIVE_MAP[incentiveName] || null;
+}
+
+// Helper function to find consumer slot by type
+function findConsumerSlotByType(consumerType) {
+    for (let i = 0; i < gameState.consumers.length; i++) {
+        const consumer = gameState.consumers[i];
+        if (consumer && consumer.name === consumerType) {
+            return i;
+        }
+    }
+    return -1;
 }
 
 /**
@@ -204,21 +221,21 @@ function updateShopInventory() {
  */
 function createCardElement(card, isShop = false, isFaceDown = false) {
     const cardDiv = document.createElement('div');
-    cardDiv.className = `card ${card.type.toLowerCase().replace(' ', '-')}`;
+    cardDiv.className = `card card--${card.type.toLowerCase().replace(' ', '-')}`;
     cardDiv.dataset.cardId = card.id;
     
     if (card.name === "Fossil") {
-        cardDiv.classList.add('fossil');
+        cardDiv.classList.add('card--fossil');
     }
     
     if (isFaceDown) {
-        cardDiv.classList.add('face-down');
+        cardDiv.classList.add('card--under-construction');
     }
 
     if (isShop) {
         // Check if card can be placed anywhere
         if (!canCardBePlacedAnywhere(card)) {
-            cardDiv.classList.add('unselectable');
+            cardDiv.classList.add('card--disabled');
         }
         
         try {
@@ -231,7 +248,7 @@ function createCardElement(card, isShop = false, isFaceDown = false) {
                 cardDiv.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('application/json', JSON.stringify(card));
                     e.dataTransfer.effectAllowed = 'move';
-                    cardDiv.classList.add('dragging');
+                    cardDiv.classList.add('card--dragging');
                     
                     // Hide the default drag image
                     const emptyImg = new Image();
@@ -240,7 +257,7 @@ function createCardElement(card, isShop = false, isFaceDown = false) {
                     
                     // Create cursor-following element like held cards
                     const dragElement = cardDiv.cloneNode(true);
-                    dragElement.classList.add('drag-following');
+                    dragElement.classList.add('card--drag-following');
                     dragElement.style.position = 'fixed';
                     dragElement.style.left = '0';
                     dragElement.style.top = '0';
@@ -268,7 +285,7 @@ function createCardElement(card, isShop = false, isFaceDown = false) {
                 // Position tracking is handled by global dragover listener
                 
                 cardDiv.addEventListener('dragend', (e) => {
-                    cardDiv.classList.remove('dragging');
+                    cardDiv.classList.remove('card--dragging');
                     
                     // Clean up drag following element
                     if (cardDiv._dragElement) {
@@ -290,22 +307,11 @@ function createCardElement(card, isShop = false, isFaceDown = false) {
         }
     }
 
-    const cardHeader = document.createElement('div');
-    cardHeader.className = 'card-header';
-    
-    const nameDiv = document.createElement('div');
-    nameDiv.className = 'card-name';
-    nameDiv.textContent = card.name;
-    
-    const typeDiv = document.createElement('div');
-    typeDiv.className = 'card-type';
-    typeDiv.textContent = card.type;
-    
-    const cardContent = document.createElement('div');
-    cardContent.className = 'card-content';
-    
-    const statsDiv = document.createElement('div');
-    statsDiv.className = 'card-stats';
+    const cardHeader = createElement('div', 'card__header');
+    const nameDiv = createElement('div', 'card__name', card.name);
+    const typeDiv = createElement('div', 'card__type', card.type);
+    const cardContent = createElement('div', 'card__content');
+    const statsDiv = createElement('div', 'card__stats');
     
     // Create stat rows
     CONFIG.STAT_TYPES.forEach(stat => {
@@ -318,9 +324,7 @@ function createCardElement(card, isShop = false, isFaceDown = false) {
     
     // Add "Next Turn" indicator for Big Generators in shop only
     if (card.type === "Big Generator" && !isFaceDown && isShop) {
-        const nextTurnDiv = document.createElement('div');
-        nextTurnDiv.className = 'next-turn-indicator';
-        nextTurnDiv.textContent = 'Next Turn';
+        const nextTurnDiv = createElement('div', 'card__next-turn-indicator', 'Next Turn');
         cardContent.appendChild(nextTurnDiv);
     }
     
@@ -480,12 +484,12 @@ function showGeneratorHover(card) {
     if (card.type === "Incentive") return;
     
     // Clear all existing highlights first (except incentive-target)
-    document.querySelectorAll('.generator-slot').forEach(slot => {
-        slot.classList.remove('valid-drop', 'invalid-drop');
+    document.querySelectorAll('.slot--generator').forEach(slot => {
+        slot.classList.remove('slot--valid-target', 'slot--invalid-target');
     });
     
     // Highlight all generator slots where this card can be placed (same logic as selection)
-    document.querySelectorAll('.generator-slot').forEach(slot => {
+    document.querySelectorAll('.slot--generator').forEach(slot => {
         const slotIndex = parseInt(slot.dataset.slot);
         const existingCard = gameState.generators[slotIndex];
         
@@ -497,9 +501,9 @@ function showGeneratorHover(card) {
         const canPlace = canPlaceCard(card, 'generator', slotIndex);
         
         if (canPlace) {
-            slot.classList.add('valid-drop');
+            slot.classList.add('slot--valid-target');
         } else {
-            slot.classList.add('invalid-drop');
+            slot.classList.add('slot--invalid-target');
         }
     });
 }
@@ -509,8 +513,8 @@ function clearGeneratorHover(card) {
     if (card.type === "Incentive") return;
     
     // Remove highlight from all generator slots
-    document.querySelectorAll('.generator-slot').forEach(slot => {
-        slot.classList.remove('valid-drop', 'invalid-drop');
+    document.querySelectorAll('.slot--generator').forEach(slot => {
+        slot.classList.remove('slot--valid-target', 'slot--invalid-target');
     });
 }
 
@@ -522,26 +526,18 @@ function showIncentiveHover(card) {
     if (!matchingConsumerType) return;
     
     // Clear existing generator highlights first
-    document.querySelectorAll('.generator-slot').forEach(slot => {
-        slot.classList.remove('valid-drop', 'invalid-drop');
+    document.querySelectorAll('.slot--generator').forEach(slot => {
+        slot.classList.remove('slot--valid-target', 'slot--invalid-target');
     });
     
     // Find the slot with the matching consumer
-    let targetSlot = -1;
-    for (let i = 0; i < gameState.consumers.length; i++) {
-        const consumer = gameState.consumers[i];
-        if (consumer && consumer.name === matchingConsumerType) {
-            targetSlot = i;
-            break;
-        }
-    }
-    
+    const targetSlot = findConsumerSlotByType(matchingConsumerType);
     if (targetSlot === -1) return;
     
     // Highlight the target card
-    const slotElement = document.querySelector(`[data-slot="${targetSlot}"].consumer-slot`);
+    const slotElement = document.querySelector(`[data-slot="${targetSlot}"].slot--consumer`);
     if (slotElement) {
-        slotElement.classList.add('incentive-target');
+        slotElement.classList.add('slot--incentive-target');
     }
     
     // Show projection for this placement
@@ -556,8 +552,8 @@ function clearIncentiveHover(card) {
 
     
     // Remove highlight from all slots
-    document.querySelectorAll('.consumer-slot').forEach(slot => {
-        slot.classList.remove('incentive-target');
+    document.querySelectorAll('.slot--consumer').forEach(slot => {
+        slot.classList.remove('slot--incentive-target');
     });
     
     // Clear projection
@@ -578,15 +574,7 @@ function playIncentiveImmediately(card) {
     if (!matchingConsumerType) return;
     
     // Find the slot with the matching consumer
-    let targetSlot = -1;
-    for (let i = 0; i < gameState.consumers.length; i++) {
-        const consumer = gameState.consumers[i];
-        if (consumer && consumer.name === matchingConsumerType) {
-            targetSlot = i;
-            break;
-        }
-    }
-    
+    const targetSlot = findConsumerSlotByType(matchingConsumerType);
     if (targetSlot === -1) {
         updateGameStatus(`No ${matchingConsumerType} found on grid!`);
         return;
@@ -605,9 +593,9 @@ function playIncentiveImmediately(card) {
     gameState.shop = gameState.shop.filter(c => c.id !== card.id);
     
     // Clear any highlighting
-    document.querySelectorAll('.card.selected').forEach(c => c.classList.remove('selected'));
-    document.querySelectorAll('.card-slot').forEach(slot => {
-        slot.classList.remove('valid-drop', 'invalid-drop', 'incentive-target');
+    document.querySelectorAll('.card--selected').forEach(c => c.classList.remove('card--selected'));
+    document.querySelectorAll('.slot').forEach(slot => {
+        slot.classList.remove('slot--valid-target', 'slot--invalid-target', 'slot--incentive-target');
         slot.onmouseenter = null;
         slot.onmouseleave = null;
     });
@@ -633,7 +621,7 @@ function playIncentiveImmediately(card) {
 // Add event listeners to slots
 function addSlotListeners() {
     // Generator slots
-    document.querySelectorAll('.generator-slot').forEach((slot, index) => {
+    document.querySelectorAll('.slot--generator').forEach((slot, index) => {
         // Click handlers
         slot.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -678,7 +666,7 @@ function addSlotListeners() {
     });
     
     // Consumer slots
-    document.querySelectorAll('.consumer-slot').forEach((slot, index) => {
+    document.querySelectorAll('.slot--consumer').forEach((slot, index) => {
         // Click handlers
         slot.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -714,9 +702,9 @@ function addSlotListeners() {
             (heldCard, slotIndex, isEntering) => {
                 const canPlace = canPlaceCard(heldCard, 'consumer', slotIndex);
                 if (isEntering && canPlace) {
-                    slot.classList.add('incentive-target');
+                    slot.classList.add('slot--incentive-target');
                 } else if (!isEntering) {
-                    slot.classList.remove('incentive-target');
+                    slot.classList.remove('slot--incentive-target');
                 }
             }
         );
@@ -742,7 +730,7 @@ function getDraggedCardData(e) {
         
         // During dragenter/dragover, we can't access the actual data
         // but we can check what's being dragged by finding the dragging element
-        const draggedElement = document.querySelector('.dragging');
+        const draggedElement = document.querySelector('.card--dragging');
         if (draggedElement && draggedElement.dataset.cardData) {
             return JSON.parse(draggedElement.dataset.cardData);
         }
@@ -780,11 +768,11 @@ function pickUpCard(card, cardElement, event) {
     gameState.heldCard = card;
     
     // Add dragging class to original card for visual consistency
-    cardElement.classList.add('dragging');
+    cardElement.classList.add('card--dragging');
     
     // Clone the card element to follow cursor
     const heldElement = cardElement.cloneNode(true);
-    heldElement.classList.add('held-card');
+    heldElement.classList.add('card--held');
     heldElement.style.position = 'fixed';
     heldElement.style.left = '0';
     heldElement.style.top = '0';
@@ -830,17 +818,8 @@ function updateHeldCardPosition(event) {
     // Maintain highlighting during movement
     if (gameState.heldCard && gameState.heldCard.type !== "Incentive") {
         // Check if highlighting is missing and restore it
-        const hasHighlighting = document.querySelector('.generator-slot.valid-drop, .generator-slot.invalid-drop');
+        const hasHighlighting = document.querySelector('.slot--generator.slot--valid-target, .slot--generator.slot--invalid-target');
         if (!hasHighlighting) {
-            showGeneratorHover(gameState.heldCard);
-        }
-    }
-    
-    // Ensure highlighting stays visible during movement
-    if (gameState.heldCard && gameState.heldCard.type !== "Incentive") {
-        // Re-apply highlighting if it got cleared somehow
-        const hasValidHighlighting = document.querySelector('.generator-slot.valid-drop, .generator-slot.invalid-drop');
-        if (!hasValidHighlighting) {
             showGeneratorHover(gameState.heldCard);
         }
     }
@@ -896,8 +875,8 @@ function putDownHeldCard() {
     }
     
     // Clear state and remove dragging class from all cards
-    document.querySelectorAll('.dragging').forEach(el => {
-        el.classList.remove('dragging');
+    document.querySelectorAll('.card--dragging').forEach(el => {
+        el.classList.remove('card--dragging');
     });
     gameState.heldCard = null;
     
@@ -960,7 +939,7 @@ function addDragHandlers(slot, index, slotType, validationFn, placementFn) {
             e.preventDefault();
             const canPlace = canPlaceCard(cardData, slotType, index);
             if (canPlace) {
-                slot.classList.add('drag-over');
+                slot.classList.add('slot--drag-over');
             }
             showProjection(cardData, slotType, index, canPlace);
         }
@@ -968,14 +947,14 @@ function addDragHandlers(slot, index, slotType, validationFn, placementFn) {
     
     slot.addEventListener('dragleave', (e) => {
         if (!slot.contains(e.relatedTarget)) {
-            slot.classList.remove('drag-over');
+            slot.classList.remove('slot--drag-over');
             clearProjection();
         }
     });
     
     slot.addEventListener('drop', (e) => {
         e.preventDefault();
-        slot.classList.remove('drag-over');
+        slot.classList.remove('slot--drag-over');
         
         try {
             const cardData = JSON.parse(e.dataTransfer.getData('application/json'));
@@ -1094,7 +1073,7 @@ function placeHeldCard(slotType, slotIndex) {
  * @param {DragEvent} event - Drag event with cursor position
  */
 function updateDragElementPosition(event) {
-    const dragElement = document.querySelector('.drag-following');
+    const dragElement = document.querySelector('.card--drag-following');
     if (!dragElement) return;
     
     // Firefox might give 0,0 coordinates sometimes, so be more lenient
@@ -1116,8 +1095,8 @@ function updateDragElementPosition(event) {
  * Clear all drag-over highlights from slots
  */
 function clearAllDragHighlights() {
-    document.querySelectorAll('.drag-over').forEach(slot => {
-        slot.classList.remove('drag-over');
+    document.querySelectorAll('.slot--drag-over').forEach(slot => {
+        slot.classList.remove('slot--drag-over');
     });
 }
 
@@ -1132,7 +1111,7 @@ function updateDisplay() {
 // Update grid display
 function updateGrid() {
     // Update generators
-    document.querySelectorAll('.generator-slot').forEach((slot, index) => {
+    document.querySelectorAll('.slot--generator').forEach((slot, index) => {
         slot.innerHTML = '';
         if (gameState.generators[index]) {
             const cardElement = createCardElement(
@@ -1145,13 +1124,13 @@ function updateGrid() {
     });
     
     // Update consumers
-    document.querySelectorAll('.consumer-slot').forEach((slot, index) => {
+    document.querySelectorAll('.slot--consumer').forEach((slot, index) => {
         slot.innerHTML = '';
         if (gameState.consumers[index]) {
             const consumer = gameState.consumers[index];
             const cardElement = createCardElement(consumer, false, consumer.faceDown);
             if (consumer.faceDown) {
-                cardElement.classList.add('empty-consumer');
+                cardElement.classList.add('card--unrevealed');
                 const revealAfterTurn = index - 3;
                 cardElement.dataset.revealTurn = revealAfterTurn;
             }
@@ -1168,19 +1147,18 @@ function updateShop() {
     generatorShop.innerHTML = '';
     incentiveShop.innerHTML = '';
     
-    // Create shop slots for generators (up to 8 slots)
-    for (let i = 0; i < 8; i++) {
-        const shopSlot = document.createElement('div');
-        shopSlot.className = 'shop-slot';
-        generatorShop.appendChild(shopSlot);
+    // Helper function to create shop slots
+    function createShopSlots(container, count = 8) {
+        for (let i = 0; i < count; i++) {
+            const shopSlot = document.createElement('div');
+            shopSlot.className = 'shop__slot';
+            container.appendChild(shopSlot);
+        }
     }
     
-    // Create shop slots for incentives (up to 8 slots)
-    for (let i = 0; i < 8; i++) {
-        const shopSlot = document.createElement('div');
-        shopSlot.className = 'shop-slot';
-        incentiveShop.appendChild(shopSlot);
-    }
+    // Create shop slots for generators and incentives
+    createShopSlots(generatorShop);
+    createShopSlots(incentiveShop);
     
     // Add generators to slots
     let generatorIndex = 0;
@@ -1216,7 +1194,7 @@ function updateShop() {
                             id: `incentive-facedown-${i}`
                         };
                         const cardElement = createCardElement(faceDownIncentive, false, true);
-                        cardElement.classList.add('empty-incentive');
+                        cardElement.classList.add('card--unrevealed');
                         const revealAfterTurn = i - 3;
                         cardElement.dataset.revealTurn = revealAfterTurn;
                         incentiveShop.children[incentiveIndex].appendChild(cardElement);

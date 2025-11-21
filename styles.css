@@ -258,12 +258,7 @@ main.game-content {
     gap: var(--spacing-md);
 }
 
-.play-areas-row {
-    display: flex;
-    gap: 20px;
-    align-items: stretch;
-}
-
+.play-areas-row,
 .shops-row {
     display: flex;
     gap: 20px;
@@ -277,19 +272,13 @@ main.game-content {
 
 .generators-section,
 .consumers-section {
-    flex: 1;
-    min-height: 200px;
-    width: 100%;
-}
-
-.generators-section,
-.consumers-section {
     background: linear-gradient(135deg, #1e3a1e, #2d4f2d);
     padding: 10px;
     border-radius: 8px;
     border: 1px solid #4a4a6a;
     flex: 1;
     width: 100%;
+    min-height: 200px;
 }
 
 .generators-section {
@@ -311,8 +300,8 @@ main.game-content {
     letter-spacing: 1px;
 }
 
-.generator-slots,
-.consumer-slots {
+.game-grid--generators,
+.game-grid--consumers {
     display: grid;
     grid-template-columns: repeat(4, minmax(100px, 1fr));
     gap: 8px;
@@ -322,7 +311,7 @@ main.game-content {
     margin: 0 auto;
 }
 
-.card-slot {
+.slot {
     width: 100px;
     height: 140px;
     border: 2px dashed #666;
@@ -334,17 +323,17 @@ main.game-content {
     position: relative;
 }
 
-.card-slot.valid-drop {
+.slot--valid-target {
     border-color: #4CAF50;
     background: rgba(76, 175, 80, 0.2);
 }
 
-.card-slot.invalid-drop {
+.slot--invalid-target {
     border-color: #f44336;
     background: rgba(244, 67, 54, 0.2);
 }
 
-.card-slot.incentive-target {
+.slot--incentive-target {
     border-color: #FFD700;
     background: rgba(255, 215, 0, 0.3);
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
@@ -365,57 +354,106 @@ main.game-content {
     overflow: hidden;
 }
 
-.shop-section .card {
+.shop-section .card:not(.card--under-construction) {
     cursor: pointer;
 }
 
-.shop-section .card:not(.face-down) {
-    cursor: pointer;
-}
-
-.shop-section .card.face-down {
+.shop-section .card--under-construction {
     cursor: default;
     pointer-events: none;
 }
 
-.shop-section .card:hover:not(.face-down):not(.dragging) {
+.shop-section .card:hover:not(.card--under-construction):not(.card--dragging) {
     transform: translateY(-5px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
 
-.card.generator .card-header {
+/* Card type background colors */
+.card--generator {
+    background: #e3f2fd;
+    border: 2px solid #5a67d8;
+}
+
+.card--big-generator {
+    background: #e0f7fa;
+    border: 2px solid #38b2ac;
+}
+
+.card--consumer {
+    background: #ffebee;
+    border: 2px solid #e53e3e;
+}
+
+.card--incentive {
+    background: #fff7ed;
+    border: 2px solid #d69e2e;
+}
+
+.card--generator .card__header {
     background: #5a67d8;
+    min-height: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1px 4px;
+    border-bottom: 1px solid #ddd;
 }
 
-.card.big-generator .card-header {
+.card--big-generator .card__header {
     background: #38b2ac;
+    min-height: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1px 4px;
+    border-bottom: 1px solid #ddd;
 }
 
-.card.consumer .card-header {
+.card--consumer .card__header {
     background: #e53e3e;
+    min-height: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1px 4px;
+    border-bottom: 1px solid #ddd;
 }
 
-.card.incentive .card-header {
+.card--incentive .card__header {
     background: #d69e2e;
+    min-height: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1px 4px;
+    border-bottom: 1px solid #ddd;
 }
 
-.card.fossil .card-header {
+.card--fossil {
+    background: #fdf6f0;
+    border: 2px solid #c05621;
+}
+
+.card--fossil .card__header {
     background: #c05621;
+    min-height: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 1px 4px;
+    border-bottom: 1px solid #ddd;
 }
 
-.card.face-down {
+/* Under construction card styles */
+.card--under-construction {
     background: linear-gradient(135deg, #333 0%, #666 100%);
 }
 
-.card.face-down .card-content {
+.card--under-construction .card__content {
     display: none;
 }
 
-.card.empty-consumer .card-type {
-    display: none;
-}
-
-.card.face-down::before {
+.card--under-construction::before {
     content: "Under Construction";
     position: absolute;
     top: 50%;
@@ -430,41 +468,27 @@ main.game-content {
     width: 80%;
 }
 
-.card.empty-consumer::before {
-    content: "Revealed After\ATurn " attr(data-reveal-turn);
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 0.6em;
-    color: #fff;
-    text-align: center;
-    font-weight: bold;
-    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
-    line-height: 1.2;
-    width: 80%;
-    white-space: pre;
-}
-
-.card.empty-consumer {
+/* Unrevealed card styles */
+.card--unrevealed {
     background: linear-gradient(135deg, #666 0%, #999 100%);
     opacity: 0.7;
 }
 
-.card.empty-consumer .card-content {
+.card--unrevealed .card__content {
     display: none;
 }
 
-.card.empty-consumer .card-name {
+.card--unrevealed .card__type,
+.card--unrevealed .card__name {
     display: none;
 }
 
-.card.empty-consumer .card-header {
+.card--unrevealed .card__header {
     background: transparent;
     border: none;
 }
 
-.card.empty-incentive::before {
+.card--unrevealed::before {
     content: "Revealed After Turn " attr(data-reveal-turn);
     position: absolute;
     top: 50%;
@@ -479,30 +503,8 @@ main.game-content {
     width: 80%;
 }
 
-.card.empty-incentive {
-    background: linear-gradient(135deg, #666 0%, #999 100%);
-    opacity: 0.7;
-}
-
-.card.empty-incentive .card-content {
-    display: none;
-}
-
-.card.empty-incentive .card-type {
-    display: none;
-}
-
-.card.empty-incentive .card-name {
-    display: none;
-}
-
-.card.empty-incentive .card-header {
-    background: transparent;
-    border: none;
-}
-
-.next-turn-indicator {
-    color: #333;
+.card__next-turn-indicator {
+    color: #666;
     text-align: center;
     padding: 2px 4px;
     font-size: 0.75em;
@@ -510,39 +512,47 @@ main.game-content {
     margin-top: 1px;
 }
 
-.card-header {
+.card__header {
     background: #5a67d8;
-    padding: 1px 4px 2px 4px;
+    padding: 1px 4px;
     border-bottom: 1px solid #ddd;
+    min-height: 32px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
-.card-type {
+.card__type {
     font-size: 0.55em;
     font-weight: normal;
     text-align: center;
     color: rgba(255, 255, 255, 0.8);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-    margin-top: 1px;
+    margin: 0;
+    line-height: 1;
+    flex-shrink: 0;
 }
 
-.card-name {
-    font-size: 0.75em;
+.card__name {
+    font-size: 0.6em;
     font-weight: bold;
-    margin-bottom: 1px;
+    margin: 0;
     text-align: center;
     color: #fff;
     text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
-    line-height: 1;
+    line-height: 1.1;
     word-wrap: break-word;
     hyphens: auto;
-    min-height: 16px;
+    height: 20px;
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 0 2px;
+    overflow: hidden;
 }
 
-.card-content {
+.card__content {
     padding: 4px;
     flex: 1;
     display: flex;
@@ -550,7 +560,7 @@ main.game-content {
     background: #f8f9fa;
 }
 
-.card-stats {
+.card__stats {
     flex: 1;
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -559,7 +569,7 @@ main.game-content {
     margin-top: 2px;
 }
 
-.stat-row {
+.stat {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -573,7 +583,7 @@ main.game-content {
     min-height: 28px;
 }
 
-.stat-label {
+.stat__label {
     font-weight: bold;
     color: #333;
     text-transform: capitalize;
@@ -582,19 +592,19 @@ main.game-content {
     margin-bottom: 1px;
 }
 
-.stat-value {
+.stat__value {
     font-weight: bold;
     color: #333;
     font-size: 1.1em;
     line-height: 1;
 }
 
-.stat-value.positive {
+.stat__value--positive {
     color: #28a745;
     font-weight: bold;
 }
 
-.stat-value.negative {
+.stat__value--negative {
     color: #dc3545;
     font-weight: bold;
 }
@@ -630,19 +640,7 @@ main.game-content {
     text-decoration: underline;
 }
 
-.game-content {
-    grid-area: content;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
 
-.play-areas-row,
-.shops-row {
-    display: flex;
-    gap: 20px;
-    align-items: flex-start;
-}
 
 .shop-section {
     background: linear-gradient(135deg, #2a2a2a, #3a3a3a);
@@ -659,7 +657,7 @@ main.game-content {
     font-size: 1.1em;
 }
 
-.shop-cards {
+.shop__grid {
     display: grid;
     grid-template-columns: repeat(4, minmax(100px, 1fr));
     gap: 8px;
@@ -669,7 +667,7 @@ main.game-content {
     margin: 0 auto;
 }
 
-.shop-slot {
+.shop__slot {
     width: 100px;
     height: 140px;
     border: 2px solid transparent;
@@ -741,32 +739,30 @@ main.game-content {
     margin-bottom: 0 !important;
 }
 
-.selected {
+.card--selected {
     border: 3px solid #FFD700 !important;
     box-shadow: 0 0 15px rgba(255, 215, 0, 0.8);
 }
 
-.unselectable {
+.card--disabled {
     opacity: 0.5;
     cursor: not-allowed !important;
     filter: grayscale(50%);
 }
 
-.unselectable:hover {
+.card--disabled:hover {
     transform: none !important;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
 }
 
-
-
-.dragging {
+.card--dragging {
     opacity: 1 !important;
     transform: scale(1.05) !important;
     z-index: 1000;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
 }
 
-.drag-over {
+.slot--drag-over {
     border-color: #4CAF50;
     background: rgba(76, 175, 80, 0.3);
     border-width: 3px;
@@ -855,49 +851,6 @@ main.game-content {
     }
 }
 
-@media (max-width: 768px) {
-    .play-areas-row {
-        flex-direction: column;
-        gap: 12px;
-    }
-}
-
-@media (max-width: 1000px) {
-    .shops-row {
-        flex-direction: column;
-        gap: 12px;
-    }
-    
-    .shops-row .shop-section {
-        flex: none;
-    }
-}
-
-@media (max-width: 900px) {
-    .play-areas-row {
-        flex-direction: column;
-        gap: 12px;
-    }
-}
-
-@media (max-width: 768px) {
-    .play-areas-row {
-        flex-direction: column;
-        gap: 12px;
-    }
-}
-
-@media (max-width: 600px) {
-    .shops-row {
-        flex-direction: column;
-        gap: 12px;
-    }
-    
-    .shops-row .shop-section {
-        flex: none;
-    }
-}
-
 @media (max-width: 1100px) {
     body {
         padding-top: 0;
@@ -952,34 +905,51 @@ main.game-content {
     }
 }
 
-@media (max-width: 600px) {
-    .shops-row {
-        flex-direction: column;
-        gap: 12px;
-    }
-    
-    .shops-row .shop-section {
-        flex: none;
-    }
-}
-
 @media (min-width: 800px) and (max-width: 999px) {
-    .generator-slots,
-    .consumer-slots,
-    .shop-cards {
+    .game-grid--generators,
+    .game-grid--consumers,
+    .shop__grid {
         grid-template-columns: repeat(4, minmax(100px, 140px));
         gap: 8px;
         max-width: 600px;
     }
+    
+    .card__header,
+    .card--generator .card__header,
+    .card--big-generator .card__header,
+    .card--consumer .card__header,
+    .card--incentive .card__header,
+    .card--fossil .card__header {
+        min-height: 36px;
+    }
+    
+    .card__name {
+        font-size: 0.65em;
+        height: 22px;
+    }
 }
 
 @media (min-width: 1000px) and (max-width: 1199px) {
-    .generator-slots,
-    .consumer-slots,
-    .shop-cards {
+    .game-grid--generators,
+    .game-grid--consumers,
+    .shop__grid {
         grid-template-columns: repeat(4, minmax(110px, 150px));
         gap: 10px;
         max-width: 700px;
+    }
+    
+    .card__header,
+    .card--generator .card__header,
+    .card--big-generator .card__header,
+    .card--consumer .card__header,
+    .card--incentive .card__header,
+    .card--fossil .card__header {
+        min-height: 40px;
+    }
+    
+    .card__name {
+        font-size: 0.7em;
+        height: 24px;
     }
 }
 
@@ -1015,19 +985,33 @@ main.game-content {
 }
 
 @media (min-width: 1200px) {
-    .generator-slots,
-    .consumer-slots,
-    .shop-cards {
+    .game-grid--generators,
+    .game-grid--consumers,
+    .shop__grid {
         grid-template-columns: repeat(4, minmax(120px, 200px));
         gap: 12px;
         max-width: 900px;
     }
+    
+    .card__header,
+    .card--generator .card__header,
+    .card--big-generator .card__header,
+    .card--consumer .card__header,
+    .card--incentive .card__header,
+    .card--fossil .card__header {
+        min-height: 44px;
+    }
+    
+    .card__name {
+        font-size: 0.75em;
+        height: 26px;
+    }
 }
 
 @media (max-width: 500px) {
-    .generator-slots,
-    .consumer-slots,
-    .shop-cards {
+    .game-grid--generators,
+    .game-grid--consumers,
+    .shop__grid {
         grid-template-columns: repeat(4, minmax(100px, 1fr));
         gap: 3px;
         justify-content: center;
@@ -1036,20 +1020,20 @@ main.game-content {
 }
 
 @media (max-width: 450px) {
-    .generator-slots,
-    .consumer-slots,
-    .shop-cards {
+    .game-grid--generators,
+    .game-grid--consumers,
+    .shop__grid {
         grid-template-columns: repeat(4, minmax(90px, 1fr));
         gap: 2px;
         justify-content: center;
         justify-items: center;
     }
     
-    .card-type {
+    .card__type {
         display: none;
     }
     
-    .stat-row {
+    .stat {
         border: none;
         box-shadow: none;
         background: transparent;
@@ -1058,16 +1042,16 @@ main.game-content {
 }
 
 @media (max-width: 400px) {
-    .generator-slots,
-    .consumer-slots,
-    .shop-cards {
+    .game-grid--generators,
+    .game-grid--consumers,
+    .shop__grid {
         grid-template-columns: repeat(4, minmax(80px, 1fr));
         gap: 2px;
         justify-content: center;
         justify-items: center;
     }
     
-    .card-slot {
+    .slot {
         width: 85px;
         height: 110px;
     }
@@ -1079,14 +1063,14 @@ main.game-content {
 }
 
 @media (max-width: 350px) {
-    .generator-slots,
-    .consumer-slots,
-    .shop-cards {
+    .game-grid--generators,
+    .game-grid--consumers,
+    .shop__grid {
         grid-template-columns: repeat(4, minmax(70px, 1fr));
         gap: 1px;
     }
     
-    .card-slot {
+    .slot {
         width: 75px;
         height: 105px;
     }
@@ -1096,7 +1080,7 @@ main.game-content {
         height: 100px;
     }
     
-    .stat-row {
+    .stat {
         border: none;
         box-shadow: none;
         background: transparent;
@@ -1112,7 +1096,7 @@ main.game-content {
 
 
 /* Held card styles - match dragging appearance */
-.held-card {
+.card--held {
     cursor: none;
     opacity: 1 !important;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
@@ -1122,7 +1106,7 @@ main.game-content {
 }
 
 /* Drag following element - same as held cards */
-.drag-following {
+.card--drag-following {
     cursor: none;
     opacity: 1 !important;
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
