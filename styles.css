@@ -362,9 +362,10 @@ main.game-content {
 
 .shop-section .card.face-down {
     cursor: default;
+    pointer-events: none;
 }
 
-.shop-section .card:hover:not(.face-down) {
+.shop-section .card:hover:not(.face-down):not(.dragging) {
     transform: translateY(-5px);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
 }
@@ -744,8 +745,23 @@ main.game-content {
 
 
 .dragging {
-    opacity: 0.7;
-    transform: rotate(5deg);
+    opacity: 1 !important;
+    transform: scale(1.05) !important;
+    z-index: 1000;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.drag-over {
+    border-color: #4CAF50;
+    background: rgba(76, 175, 80, 0.3);
+    border-width: 3px;
+    animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
 }
 
 @media (max-width: 1200px) {
@@ -815,4 +831,24 @@ main.game-content {
         width: 90px;
         height: 130px;
     }
+}
+
+/* Held card styles - match dragging appearance */
+.held-card {
+    cursor: none;
+    opacity: 1 !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    transition: none;
+    will-change: transform;
+    z-index: 1000;
+}
+
+/* Drag following element - same as held cards */
+.drag-following {
+    cursor: none;
+    opacity: 1 !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    transition: none;
+    will-change: transform;
+    z-index: 10000;
 }
