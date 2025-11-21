@@ -39,6 +39,7 @@ body {
     margin: 0;
     padding: 0;
     overflow-x: auto;
+    padding-top: env(safe-area-inset-top);
 }
 
 .game-container {
@@ -66,6 +67,9 @@ header.top-bar {
     border-radius: var(--radius-lg);
     border: 1px solid #333;
     gap: var(--spacing-xxl);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
 .title-section {
@@ -117,6 +121,8 @@ header.top-bar {
 .balance-display {
     display: flex;
     gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
 }
 
 .balance-item {
@@ -124,10 +130,14 @@ header.top-bar {
     align-items: center;
     gap: 4px;
     background: rgba(255, 255, 255, 0.2);
-    padding: 4px 8px;
+    padding: 4px 6px;
     border-radius: 4px;
     font-size: 0.85em;
     white-space: nowrap;
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+    max-width: 80px;
 }
 
 .balance-item .label {
@@ -767,15 +777,61 @@ main.game-content {
     100% { transform: scale(1); }
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1100px) {
+    .top-bar,
+    header.top-bar {
+        border-radius: 0 !important;
+        margin: -16px -16px 16px -16px;
+        position: sticky;
+        top: 0;
+    }
+}
+
+@media (max-width: 768px) {
     .top-bar {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 8px;
+        text-align: left;
+        align-items: flex-start;
+    }
+    
+    .title-section {
+        display: flex;
         flex-direction: column;
-        gap: 12px;
-        text-align: center;
+        align-items: flex-start;
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .controls-section {
+        margin: 0;
+        align-self: flex-start;
     }
     
     .balance-section {
+        order: 3;
         justify-content: center;
+        width: 100%;
+        flex-basis: 100%;
+    }
+}
+
+@media (max-width: 600px) {
+    .balance-section {
+        gap: 8px;
+    }
+    
+    .balance-item {
+        padding: 3px 4px;
+        font-size: 0.8em;
+        max-width: none;
+        flex: 1;
+    }
+    
+    .balance-display {
+        gap: 2px;
+        width: 100%;
     }
 }
 
@@ -840,9 +896,25 @@ main.game-content {
     }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1100px) {
+    body {
+        padding-top: 0;
+    }
+    
     .game-container {
-        padding: 8px;
+        padding: 0 16px 16px 16px;
+        margin-top: 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .top-bar,
+    header.top-bar {
+        margin: -16px -8px 12px -8px;
+    }
+    
+    .game-container {
+        padding: 0 8px 8px 8px;
         gap: 12px;
     }
     
@@ -850,14 +922,31 @@ main.game-content {
         gap: 12px;
     }
     
-    .balance-display {
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-    
     .play-areas-row {
         flex-direction: column;
         gap: 12px;
+    }
+}
+
+@media (max-width: 400px) {
+    .balance-item {
+        padding: 2px 3px;
+        font-size: 0.75em;
+        max-width: none;
+        flex: 1;
+    }
+    
+    .balance-item .label {
+        font-size: 0.75em;
+    }
+    
+    .balance-item .value {
+        font-size: 1em;
+    }
+    
+    .balance-display {
+        gap: 1px;
+        width: 100%;
     }
 }
 
@@ -889,6 +978,37 @@ main.game-content {
         grid-template-columns: repeat(4, minmax(110px, 150px));
         gap: 10px;
         max-width: 700px;
+    }
+}
+
+@media (min-width: 1100px) {
+    .top-bar {
+        position: relative;
+        justify-content: center;
+        min-height: 70px;
+        align-items: center;
+    }
+    
+    .title-section {
+        position: absolute;
+        left: var(--spacing-xl);
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+    }
+    
+    .controls-section {
+        position: absolute;
+        right: var(--spacing-xl);
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 10;
+    }
+    
+    .balance-section {
+        position: relative;
+        z-index: 5;
+        margin: 0;
     }
 }
 
